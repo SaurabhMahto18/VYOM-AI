@@ -2,12 +2,16 @@ import threading
 import tkinter as tk
 
 from core.brain import ask_vyom
+from core.command_router import execute_command
+
 from voice.speech_to_text import listen
 from voice.text_to_speech import speak
+
 from ui.window import VYOMWindow
 
 
 def update_state(app, state):
+
     app.root.after(
         0,
         lambda: app.set_state(state)
@@ -15,6 +19,7 @@ def update_state(app, state):
 
 
 def update_user_text(app, text):
+
     app.root.after(
         0,
         lambda: app.set_user_text(text)
@@ -25,6 +30,10 @@ def assistant_loop(app):
 
     while True:
 
+        # -----------------------------
+        # LISTENING
+        # -----------------------------
+
         update_state(app, "listening")
 
         user_input = listen()
@@ -34,7 +43,11 @@ def assistant_loop(app):
 
         update_user_text(app, user_input)
 
-        if user_input.lower() in [
+        # -----------------------------
+        # EXIT
+        # -----------------------------
+
+        if user_input.lower().strip() in [
             "exit",
             "quit",
             "bye",
@@ -55,9 +68,37 @@ def assistant_loop(app):
 
         try:
 
+            # -----------------------------
+            # THINKING
+            # -----------------------------
+
             update_state(app, "thinking")
 
-            response = ask_vyom(user_input)
+            handled, result = execute_command(
+                user_input
+            )
+
+            # -----------------------------
+            # COMPUTER COMMAND
+            # -----------------------------
+
+            if handled:
+
+                response = result
+
+            # -----------------------------
+            # NORMAL AI CONVERSATION
+            # -----------------------------
+
+            else:
+
+                response = ask_vyom(
+                    user_input
+                )
+
+            # -----------------------------
+            # SPEAKING
+            # -----------------------------
 
             update_state(app, "speaking")
 
