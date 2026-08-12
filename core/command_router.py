@@ -1,6 +1,8 @@
 from core.intent import detect_intent
 from core.permissions import is_allowed
+
 from tools.apps import open_app
+from tools.browser import open_website, google_search
 
 
 def execute_command(user_input):
@@ -10,13 +12,33 @@ def execute_command(user_input):
     action = intent["action"]
     target = intent["target"]
 
+    # -----------------------------------
+    # NORMAL CHAT
+    # -----------------------------------
+
     if action == "none":
 
         return False, None
 
-    if not is_allowed(action):
+    # -----------------------------------
+    # PERMISSION
+    # -----------------------------------
 
-        return True, "I don't have permission to perform that action."
+    permission_action = action
+
+    if action == "google_search":
+        permission_action = "open_browser"
+
+    if not is_allowed(permission_action):
+
+        return True, (
+            "I don't have permission "
+            "to perform that action."
+        )
+
+    # -----------------------------------
+    # OPEN APP
+    # -----------------------------------
 
     if action == "open_app":
 
@@ -24,4 +46,27 @@ def execute_command(user_input):
 
         return True, message
 
-    return True, "I don't know how to perform that action."
+    # -----------------------------------
+    # OPEN WEBSITE
+    # -----------------------------------
+
+    if action == "open_browser":
+
+        success, message = open_website(target)
+
+        return True, message
+
+    # -----------------------------------
+    # GOOGLE SEARCH
+    # -----------------------------------
+
+    if action == "google_search":
+
+        success, message = google_search(target)
+
+        return True, message
+
+    return True, (
+        "I don't know how to perform "
+        "that action."
+    )
